@@ -4,12 +4,12 @@ namespace ThomasAlgorithmSharp
 {
     class Program
     {
-        static double alpha =2.0;
-        static double beta =1.0;
-        static double gamma =1.0;
-        static int n =10;
-        static double h = 1.0/n;
-        static int N = n+1;
+        static double alpha = 2.0;
+        static double beta = 2.0;
+        static double gamma = 8.0;
+        static int n = 10;
+        static double h = 1.0 / n;
+        static int N = n + 1;
         static double epsilon = Math.Pow(h, 3);
         #region functions
         static double Q(double x)
@@ -70,6 +70,30 @@ namespace ThomasAlgorithmSharp
                 if (max < Math.Abs(i)) max = Math.Abs(i);
             }
             return max;
+        }
+        #endregion
+
+        #region algem
+        static double[] MultiplyingMatrixVector(DiagonalMatrix a, double[] x)
+        {
+            double[] res = new double[x.Length];
+            for (int i = 0; i<x.Length; i++)
+            {
+                for (int j = 0; j<x.Length; j++)
+                {
+                    res[i] += a[i, j] * x[j];
+                }
+            }
+            return res;
+        }
+        static double ScalarProduct(double[] x, double[] y)
+        {
+            double res = 0.0;
+            for (int i = 0; i<x.Length; i++)
+            {
+                res += x[i] * y[i];
+            }
+            return res;
         }
         #endregion
 
@@ -254,6 +278,28 @@ namespace ThomasAlgorithmSharp
             }
 
         }
+        static void FastestDescent(DiagonalMatrix A)
+        {
+            DiagonalMatrix a = A.Copy();
+            double[] b = InitiateB();
+            double[] x = new double[N];
+            int k = 0;
+            double r;
+            double[] rk;
+            do
+            {
+                rk = R(a, x, b);
+                r = ScalarProduct(rk, rk) / ScalarProduct(MultiplyingMatrixVector(a, rk), rk);
+                for (int i = 0; i <x.Length; i++)
+                {
+                    x[i] -= r * rk[i];
+                }
+                k++;
+            }
+            while (MaxR(a, x, b) > epsilon);
+            Console.WriteLine($"Метод наискорейшего спуска {k} итераций");
+            PrintTable(x);
+        }
         static void Main(string[] args)
         {
             DiagonalMatrix A = InitiateMatrix();
@@ -262,9 +308,8 @@ namespace ThomasAlgorithmSharp
             Seidel(A);
             //A.Print();
             Jacobi(A);
+            FastestDescent(A);
         }
-        
-
     }
     class DiagonalMatrix
     {
