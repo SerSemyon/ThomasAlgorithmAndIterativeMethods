@@ -1,16 +1,17 @@
 ﻿using System;
-
+using System.IO;
 namespace ThomasAlgorithmSharp
 {
     class Program
     {
-        static double alpha = 2.0;
-        static double beta = 2.0;
-        static double gamma = 8.0;
+        static double alpha = 1.0;
+        static double beta = 1.0;
+        static double gamma = 2.0;
         static int n = 10;
         static double h = 1.0 / n;
         static int N = n + 1;
         static double epsilon = Math.Pow(h, 3);
+        static string[] headers = { "ih", "yi", "u(ih)", "|yi-u(ih)|" };
         #region functions
         static double Q(double x)
         {
@@ -198,8 +199,10 @@ namespace ThomasAlgorithmSharp
                 k++;
             }
             while (MaxR(a, x, b) > epsilon);
-            Console.WriteLine($"Метод Зейделя {k} итераций");
+            string header = $"Метод Зейделя. Число итераций: {k}";
+            Console.WriteLine(header);
             PrintTable(x);
+            PrintTableLaTeX(x, $"Метод Зейделя. Число итераций: {k}");
         }
         static void Jacobi(DiagonalMatrix A)
         {
@@ -228,8 +231,10 @@ namespace ThomasAlgorithmSharp
                 k++;
             }
             while (MaxR(a, x, b) > epsilon);
-            Console.WriteLine($"Метод Якоби {k} итераций");
+            string header = $"Метод Якоби. Число итераций: {k}";
+            Console.WriteLine(header);
             PrintTable(x);
+            Console.WriteLine(Reporter.PrintTableLaTeX(header, headers, DataToTable(x)));
         }
         static int Relax(DiagonalMatrix A, double omega)
         {
@@ -243,7 +248,6 @@ namespace ThomasAlgorithmSharp
                 for (int i =0; i<x.Length; i++)
                 {
                     cx[i] = b[i] / a[i, i];
-                    //cx[i] = (1 - omega) * x[i];
                     for (int j = 0; j<i; j++)
                     {
                         cx[i] -= a[i, j] / a[i, i] * cx[j];
@@ -262,10 +266,6 @@ namespace ThomasAlgorithmSharp
                 k++;
             }
             while (MaxR(a, x, b) > epsilon);
-            for (int i = 0; i < x.Length; i++)
-            {
-                Console.WriteLine(x[i]);
-            }
             return k;
         }
         static void PrintTable(double[] x)
@@ -277,6 +277,34 @@ namespace ThomasAlgorithmSharp
                 Console.WriteLine("{0,20}{1,25}{2,30}{3,30}", i * h, x[i], u, Math.Abs(x[i] - u));
             }
 
+        }
+        static string[][] DataToTable(double[] x)
+        {
+            string[][] data = new string[4][];
+            for (int i = 0; i<4; i++)
+            {
+                data[i] = new string[x.Length];
+            }
+            for (int i =0; i<x.Length; i++)
+            {
+                data[0][i] = Math.Round(h * i,2).ToString();
+                data[1][i] = Math.Round(x[i],10).ToString();
+                double u = U(i * h);
+                data[2][i] = Math.Round(u,10).ToString();
+                data[3][i] = Math.Round(Math.Abs(x[i] - u),10).ToString();
+            }
+            return data;
+        }
+        static void PrintTableLaTeX(double[] x, string nameTable)
+        {
+            Console.WriteLine(@"\begin{table}\caption{"+nameTable+@"}\begin {tabular}{|p{3cm}|p{3cm}|p{3cm}|p{3cm}|} \hline ");
+            Console.WriteLine(@"$ih$ & $y_i$ & $u(ih)$ & $|y_i-u(ih)|$ \\ \hline");
+            for (int i = 0; i < x.Length; i++)
+            {
+                double u = U(i * h);
+                Console.Write("{0:0.00}&{1:0.0000000000}&{2:0.0000000000}&{3:0.0000000000} \\\\", h*i, x[i], u, Math.Abs(x[i] - u));
+            }
+            Console.WriteLine(@"\hline\end{tabular} \end{table}");
         }
         static void FastestDescent(DiagonalMatrix A)
         {
@@ -297,18 +325,56 @@ namespace ThomasAlgorithmSharp
                 k++;
             }
             while (MaxR(a, x, b) > epsilon);
-            Console.WriteLine($"Метод наискорейшего спуска {k} итераций");
+            Console.WriteLine($"Метод наискорейшего спуска. Число итераций: {k}");
             PrintTable(x);
         }
         static void Main(string[] args)
         {
             DiagonalMatrix A = InitiateMatrix();
             //PrintTable();
-            Thomas(A);
-            Seidel(A);
+            //Thomas(A);
+            //Seidel(A);
             //A.Print();
             Jacobi(A);
-            FastestDescent(A);
+            //FastestDescent(A);
+            //double omegaH = 1.0 / 20;
+            //for (double omega = 1; omega<2; omega += omegaH)
+            //{
+            //    Console.WriteLine(Relax(A, omega));
+            //}
+        }
+    }
+    class Reporter
+    {
+        public static string PrintTableLaTeX(string nameTable, string[] names, string[][] data)
+        {
+            //настройки таблицы
+            string result = @"\begin{table}\caption{" + nameTable + @"}\begin {tabular}{|";
+            for (int i = 0; i < names.Length; i++)
+            {
+                result += @"p{ 3cm}|";
+            }
+            result += @"} \hline $"+ names[0]+"$ \n";
+            
+            for (int i = 1; i < names.Length; i++) //шапка таблицы
+            {
+                result += " & $" + names[i] + "$";
+            }
+            result += @"\\ \hline ";
+
+            int rows = data[0].Length;
+            int columns = data.Length;
+            for (int i = 0; i < rows; i++)
+            {
+                if (i!=0) result += @"\\ ";
+                result += "\n"+$"{data[0][i]}";
+                for (int j = 1; j < columns; j++)
+                {
+                    result += $" & {data[j][i]}";
+                }
+            }
+            result += @"\\ \hline\end{tabular} \end{table}";
+            return result;
         }
     }
     class DiagonalMatrix
