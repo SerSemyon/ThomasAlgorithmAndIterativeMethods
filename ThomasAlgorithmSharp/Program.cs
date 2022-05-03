@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Collections.Generic;
+using System.Collections;
 namespace ThomasAlgorithmSharp
 {
     class Program
@@ -12,6 +14,8 @@ namespace ThomasAlgorithmSharp
         static int N = n + 1;
         static double epsilon = Math.Pow(h, 3);
         static string[] headers = { "ih", "yi", "u(ih)", "|yi-u(ih)|" };
+        static double bestOmega;
+        static Reporter reporter = new Reporter();
         #region functions
         static double Q(double x)
         {
@@ -154,7 +158,6 @@ namespace ThomasAlgorithmSharp
                 matrix[i, i] -= matrix[i - 1, i] * a;
                 b[i] -= b[i - 1] * a;
             }
-            matrix.Print(b);
         }
         static double[] ReverseCourse(DiagonalMatrix matrix, double[] b)
         {
@@ -170,11 +173,10 @@ namespace ThomasAlgorithmSharp
         {
             DiagonalMatrix matrix = A.Copy();
             double[] B = InitiateB();
-            matrix.Print(B);
             DirectCourse(matrix, B);
             double[] y = ReverseCourse(matrix, B);
-            Console.WriteLine("Метод Прогонки");
-            PrintTable(y);
+            string header = "Метод Прогонки";
+            reporter.Add(header, headers, DataToTable(y));
         }
         #endregion
         static void Seidel(DiagonalMatrix A)
@@ -182,6 +184,7 @@ namespace ThomasAlgorithmSharp
             DiagonalMatrix a = A.Copy();
             double[] b = InitiateB();
             double[] x = new double[N];
+            List<double> inaccuracy = new List<double>();
             int k = 0;
             do
             {
@@ -196,20 +199,37 @@ namespace ThomasAlgorithmSharp
                         }
                     }
                 }
+                double cInaccuracy = 0;
+                for (int i = 0; i < x.Length; i++)
+                {
+                    if (cInaccuracy < Inaccuracy(x[i], i)) cInaccuracy = Inaccuracy(x[i], i);
+                }
                 k++;
+                inaccuracy.Add(cInaccuracy);
             }
             while (MaxR(a, x, b) > epsilon);
             string header = $"Метод Зейделя. Число итераций: {k}";
-            Console.WriteLine(header);
-            PrintTable(x);
-            PrintTableLaTeX(x, $"Метод Зейделя. Число итераций: {k}");
+            string[] Headers = { "Число итераций", "Погрешность" };
+            double[] vecInaccuracy = new double[inaccuracy.Count];
+            double[] K = new double[inaccuracy.Count];
+            for (int i = 0; i < vecInaccuracy.Length; i++)
+            {
+                K[i] = i + 1;
+                vecInaccuracy[i] = inaccuracy[i];
+            }
+            reporter.Add(header, headers, DataToTable(x));
+            header = "Метод Зейделя. График погрешности";
+            Reporter.CreateCSV(header, Headers, Table2Columns(K, vecInaccuracy));
         }
+
+
         static void Jacobi(DiagonalMatrix A)
         {
             DiagonalMatrix a = A.Copy();
             double[] b = InitiateB();
             double[] x = new double[N];
             double[] cx = new double[N];
+            List<double> inaccuracy = new List<double>();
             int k = 0;
             do
             {
@@ -224,17 +244,59 @@ namespace ThomasAlgorithmSharp
                         }
                     }
                 }
+                double cInaccuracy = 0;
                 for (int i = 0; i < x.Length; i++)
                 {
+                    if (cInaccuracy < Inaccuracy(cx[i],i)) cInaccuracy = Inaccuracy(cx[i], i);
                     x[i] = cx[i];
                 }
                 k++;
+                inaccuracy.Add(cInaccuracy);
             }
             while (MaxR(a, x, b) > epsilon);
             string header = $"Метод Якоби. Число итераций: {k}";
-            Console.WriteLine(header);
-            PrintTable(x);
-            Console.WriteLine(Reporter.PrintTableLaTeX(header, headers, DataToTable(x)));
+            string[] Headers = { "Число итераций", "Погрешность" };
+            double[] vecInaccuracy = new double[inaccuracy.Count];
+            double[] K = new double[inaccuracy.Count];
+            for (int i = 0; i<vecInaccuracy.Length; i++)
+            {
+                K[i] = i + 1;
+                vecInaccuracy[i] = inaccuracy[i];
+            }
+            reporter.Add(header, headers, DataToTable(x));
+            header = "Метод Якоби. График погрешности";
+            Reporter.CreateCSV(header, Headers, Table2Columns(K, vecInaccuracy));
+        }
+        #region Relax
+        static void RelaxFromOmega(DiagonalMatrix A, int numberParts)
+        {
+            double omegaH = 1.0 / numberParts;
+            double[] Omega = new double[numberParts];
+            double[] inaccuracy = new double[numberParts];
+            Omega[0] = 1;
+            double omega = 1;
+            for (int i = 0; i < Omega.Length; i++)
+            {
+                Omega[i] = omega;
+                inaccuracy[i] = Relax(A, omega);
+                omega += omegaH;
+            }
+            string header = "Омега";
+            string[] Headers = { @"\omega", "Число итераций" };
+            string[][] data = Table2Columns(Omega, inaccuracy);
+            reporter.Add(header, Headers, data);
+            double optimOmega = Omega[0];
+            double min = inaccuracy[0];
+            for (int i = 0; i<Omega.Length; i++)
+            {
+                if (inaccuracy[i] < min)
+                {
+                    min = inaccuracy[i];
+                    optimOmega = Omega[i];
+                }
+            }
+            bestOmega = Math.Round(optimOmega, 2);
+            Console.WriteLine("Оптимальное значение омега: " + bestOmega);
         }
         static int Relax(DiagonalMatrix A, double omega)
         {
@@ -268,6 +330,55 @@ namespace ThomasAlgorithmSharp
             while (MaxR(a, x, b) > epsilon);
             return k;
         }
+
+        static void Relax(DiagonalMatrix A)
+        {
+            DiagonalMatrix a = A.Copy();
+            double[] b = InitiateB();
+            double[] x = new double[N];
+            double[] cx = new double[N];
+            List<double> inaccuracy = new List<double>();
+            int k = 0;
+            do
+            {
+                for (int i = 0; i < x.Length; i++)
+                {
+                    cx[i] = b[i] / a[i, i];
+                    for (int j = 0; j < i; j++)
+                    {
+                        cx[i] -= a[i, j] / a[i, i] * cx[j];
+                    }
+                    for (int j = i + 1; j < x.Length; j++)
+                    {
+                        cx[i] -= a[i, j] / a[i, i] * x[j];
+                    }
+                    cx[i] *= bestOmega;
+                    cx[i] += (1 - bestOmega) * x[i];
+                }
+                double cInaccuracy = 0;
+                for (int i = 0; i < x.Length; i++)
+                {
+                    if (cInaccuracy < Inaccuracy(cx[i], i)) cInaccuracy = Inaccuracy(cx[i], i);
+                    x[i] = cx[i];
+                }
+                k++;
+                inaccuracy.Add(cInaccuracy);
+            }
+            while (MaxR(a, x, b) > epsilon);
+            string header = $"Метод Релаксации. Число итераций: {k}";
+            string[] Headers = { "Число итераций", "Погрешность" };
+            double[] vecInaccuracy = new double[inaccuracy.Count];
+            double[] K = new double[inaccuracy.Count];
+            for (int i = 0; i < vecInaccuracy.Length; i++)
+            {
+                K[i] = i + 1;
+                vecInaccuracy[i] = inaccuracy[i];
+            }
+            reporter.Add(header, headers, DataToTable(x));
+            header = "Метод Релаксации. График погрешности";
+            Reporter.CreateCSV(header, Headers, Table2Columns(K, vecInaccuracy));
+        }
+        #endregion relax
         static void PrintTable(double[] x)
         {
             Console.WriteLine("{0,20}{1,25}{2,30}{3,30}", "ih", "yi", "u(ih)", "|yi-u(ih)|");
@@ -295,6 +406,22 @@ namespace ThomasAlgorithmSharp
             }
             return data;
         }
+        static string[][] Table2Columns(double[] x, double[] y)
+        {
+            string[][] data = new string[2][];
+            data[0] = new string[x.Length];
+            data[1] = new string[y.Length];
+            for (int i =0; i < x.Length; i++)
+            {
+                data[0][i] = Math.Round(x[i],3).ToString();
+                data[1][i] = Math.Round(y[i],10).ToString();
+            }
+            return data;
+        }
+        static double Inaccuracy(double x, int i)
+        {
+            return Math.Abs(x - U(i * h));
+        }
         static void PrintTableLaTeX(double[] x, string nameTable)
         {
             Console.WriteLine(@"\begin{table}\caption{"+nameTable+@"}\begin {tabular}{|p{3cm}|p{3cm}|p{3cm}|p{3cm}|} \hline ");
@@ -311,6 +438,7 @@ namespace ThomasAlgorithmSharp
             DiagonalMatrix a = A.Copy();
             double[] b = InitiateB();
             double[] x = new double[N];
+            List<double> inaccuracy = new List<double>();
             int k = 0;
             double r;
             double[] rk;
@@ -322,31 +450,47 @@ namespace ThomasAlgorithmSharp
                 {
                     x[i] -= r * rk[i];
                 }
+                double cInaccuracy = 0;
+                for (int i = 0; i < x.Length; i++)
+                {
+                    if (cInaccuracy < Inaccuracy(x[i], i)) cInaccuracy = Inaccuracy(x[i], i);
+                }
                 k++;
+                inaccuracy.Add(cInaccuracy);
             }
             while (MaxR(a, x, b) > epsilon);
-            Console.WriteLine($"Метод наискорейшего спуска. Число итераций: {k}");
-            PrintTable(x);
+            string header = $"Метод наискорейшего спуска. Число итераций: {k}";
+            string[] Headers = { "Число итераций", "Погрешность" };
+            double[] vecInaccuracy = new double[inaccuracy.Count];
+            double[] K = new double[inaccuracy.Count];
+            for (int i = 0; i < vecInaccuracy.Length; i++)
+            {
+                K[i] = i + 1;
+                vecInaccuracy[i] = inaccuracy[i];
+            }
+            reporter.Add(header, headers, DataToTable(x));
+            header = "Метод наискорейшего спуска. График погрешности";
+            Reporter.CreateCSV(header, Headers, Table2Columns(K, vecInaccuracy));
         }
         static void Main(string[] args)
         {
             DiagonalMatrix A = InitiateMatrix();
-            //PrintTable();
-            //Thomas(A);
-            //Seidel(A);
-            //A.Print();
+            Thomas(A);
             Jacobi(A);
-            //FastestDescent(A);
-            //double omegaH = 1.0 / 20;
-            //for (double omega = 1; omega<2; omega += omegaH)
-            //{
-            //    Console.WriteLine(Relax(A, omega));
-            //}
+            Seidel(A);
+            FastestDescent(A);
+            RelaxFromOmega(A, 20);
+            Relax(A);
         }
     }
     class Reporter
     {
-        public static string PrintTableLaTeX(string nameTable, string[] names, string[][] data)
+        public void Add(string nameTable, string[] names, string[][] data)
+        {
+            Console.WriteLine(PrintTableLaTeX(nameTable, names, data));
+            CreateCSV(nameTable, names, data);
+        }
+        static string PrintTableLaTeX(string nameTable, string[] names, string[][] data)
         {
             //настройки таблицы
             string result = @"\begin{table}\caption{" + nameTable + @"}\begin {tabular}{|";
@@ -375,6 +519,30 @@ namespace ThomasAlgorithmSharp
             }
             result += @"\\ \hline\end{tabular} \end{table}";
             return result;
+        }
+        public static void CreateCSV(string nameFile, string[] names, string[][] data)
+        {
+            StreamWriter writer = new StreamWriter(nameFile + ".csv");
+            for (int i = 0; i<names.Length-1; i++)
+            {
+                writer.Write(names[i]+";");
+            }
+            writer.WriteLine(names[names.Length - 1]);
+            int rows = data[0].Length;
+            int columns = data.Length;
+            for (int i = 0; i < rows; i++)
+            {
+                for (int j = 0; j<columns-1; j++)
+                {
+                    writer.Write(data[j][i] + ";");
+                }
+                writer.WriteLine(data[columns-1][i]);
+            }
+            writer.Close();
+        }
+        public Reporter()
+        {
+
         }
     }
     class DiagonalMatrix
