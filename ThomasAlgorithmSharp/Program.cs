@@ -447,7 +447,7 @@ namespace ThomasAlgorithmSharp
                 inaccuracy.Add(cInaccuracy);
             }
             while (MaxR(a, x, b) > epsilon);
-            string header = $"Метод наискорейшего спуска. Число итераций: {k}";
+            string header = $"Метод наискорейшего спуска. Число итераций {k}";
             string[] Headers = { "Число итераций", "Погрешность" };
             double[] vecInaccuracy = new double[inaccuracy.Count];
             double[] K = new double[inaccuracy.Count];
@@ -476,9 +476,6 @@ namespace ThomasAlgorithmSharp
         public void Add(string nameTable, string[] names, string[][] data)
         {
             Console.WriteLine(PrintTableLaTeX(nameTable, names, data));
-            //string[][] newData = new string[2][];
-            //newData[0] = data[1];
-            //newData[1] = data[2];
             CreateCSV(nameTable, names, data);
         }
         static string PrintTableLaTeX(string nameTable, string[] names, string[][] data)
@@ -513,7 +510,7 @@ namespace ThomasAlgorithmSharp
         }
         public static void CreateCSV(string nameFile, string[] names, string[][] data)
         {
-            StreamWriter writer = new StreamWriter(nameFile + ".csv");
+            StreamWriter writer = new StreamWriter("Данные для графиков\\"+nameFile + ".csv");
             for (int i = 0; i<names.Length-1; i++)
             {
                 writer.Write(names[i]+";");
