@@ -208,7 +208,7 @@ namespace ThomasAlgorithmSharp
                 inaccuracy.Add(cInaccuracy);
             }
             while (MaxR(a, x, b) > epsilon);
-            string header = $"Метод Зейделя. Число итераций: {k}";
+            string header = $"Метод Зейделя. Число итераций {k}";
             string[] Headers = { "Число итераций", "Погрешность" };
             double[] vecInaccuracy = new double[inaccuracy.Count];
             double[] K = new double[inaccuracy.Count];
@@ -253,7 +253,7 @@ namespace ThomasAlgorithmSharp
                 inaccuracy.Add(cInaccuracy);
             }
             while (MaxR(a, x, b) > epsilon);
-            string header = $"Метод Якоби. Число итераций: {k}";
+            string header = $"Метод Якоби. Число итераций {k}";
             string[] Headers = { "Число итераций", "Погрешность" };
             double[] vecInaccuracy = new double[inaccuracy.Count];
             double[] K = new double[inaccuracy.Count];
@@ -295,7 +295,7 @@ namespace ThomasAlgorithmSharp
                 }
             }
             bestOmega = Math.Round(optimOmega, 2);
-            Console.WriteLine("Оптимальное значение омега: " + bestOmega);
+            Console.WriteLine("Оптимальное значение омега - " + bestOmega);
         }
         static int Relax(DiagonalMatrix A, double omega)
         {
@@ -364,7 +364,7 @@ namespace ThomasAlgorithmSharp
                 inaccuracy.Add(cInaccuracy);
             }
             while (MaxR(a, x, b) > epsilon);
-            string header = $"Метод Релаксации. Число итераций: {k}";
+            string header = $"Метод Релаксации. Число итераций {k}";
             string[] Headers = { "Число итераций", "Погрешность" };
             double[] vecInaccuracy = new double[inaccuracy.Count];
             double[] K = new double[inaccuracy.Count];
@@ -476,6 +476,9 @@ namespace ThomasAlgorithmSharp
         public void Add(string nameTable, string[] names, string[][] data)
         {
             Console.WriteLine(PrintTableLaTeX(nameTable, names, data));
+            //string[][] newData = new string[2][];
+            //newData[0] = data[1];
+            //newData[1] = data[2];
             CreateCSV(nameTable, names, data);
         }
         static string PrintTableLaTeX(string nameTable, string[] names, string[][] data)
