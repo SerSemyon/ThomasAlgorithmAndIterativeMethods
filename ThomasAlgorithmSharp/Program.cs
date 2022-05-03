@@ -222,7 +222,6 @@ namespace ThomasAlgorithmSharp
             Reporter.CreateCSV(header, Headers, Table2Columns(K, vecInaccuracy));
         }
 
-
         static void Jacobi(DiagonalMatrix A)
         {
             DiagonalMatrix a = A.Copy();
@@ -421,17 +420,6 @@ namespace ThomasAlgorithmSharp
         static double Inaccuracy(double x, int i)
         {
             return Math.Abs(x - U(i * h));
-        }
-        static void PrintTableLaTeX(double[] x, string nameTable)
-        {
-            Console.WriteLine(@"\begin{table}\caption{"+nameTable+@"}\begin {tabular}{|p{3cm}|p{3cm}|p{3cm}|p{3cm}|} \hline ");
-            Console.WriteLine(@"$ih$ & $y_i$ & $u(ih)$ & $|y_i-u(ih)|$ \\ \hline");
-            for (int i = 0; i < x.Length; i++)
-            {
-                double u = U(i * h);
-                Console.Write("{0:0.00}&{1:0.0000000000}&{2:0.0000000000}&{3:0.0000000000} \\\\", h*i, x[i], u, Math.Abs(x[i] - u));
-            }
-            Console.WriteLine(@"\hline\end{tabular} \end{table}");
         }
         static void FastestDescent(DiagonalMatrix A)
         {
