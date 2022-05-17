@@ -642,27 +642,5 @@ namespace ThomasAlgorithmSharp
                 Console.WriteLine(" | "+b[i]);
             }
         }
-        static public void TestMatrix(DiagonalMatrix matrix)
-        {
-            for (int i = 0; i < matrix.GetLength(); i++)
-            {
-                for (int j = 0; j < matrix.GetLength(); j++)
-                {
-                    if (i == j)
-                    {
-                        matrix[i, j] = 2;
-                    }
-                    else if (j - i == 1)
-                    {
-                        matrix[i, j] = 3;
-                    }
-                    else if (i - j == 1)
-                    {
-                        matrix[i, j] = 1;
-                    }
-                }
-            }
-            matrix.Print();
-        }
     }
 }
