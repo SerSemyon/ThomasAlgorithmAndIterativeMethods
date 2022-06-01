@@ -83,7 +83,7 @@ namespace ThomasAlgorithmSharp
         /// <summary>
         /// Задание элемента верхней диагонали
         /// </summary>
-        /// <param name="row"> Индекс столбца </param>
+        /// <param name="row"> Индекс строки </param>
         /// <param name="value"> Записываемое значение </param>
         public void SetHighDiag(int row, double value)
         {
@@ -92,7 +92,7 @@ namespace ThomasAlgorithmSharp
         /// <summary>
         /// Задание элемента центральной диагонали
         /// </summary>
-        /// <param name="row"> Индекс столбца </param>
+        /// <param name="row"> Индекс строки </param>
         /// <param name="value"> Записываемое значение </param>
         public void SetDiag(int row, double value)
         {
@@ -101,7 +101,7 @@ namespace ThomasAlgorithmSharp
         /// <summary>
         /// Задание элемента нижней диагонали
         /// </summary>
-        /// <param name="row"> Индекс столбца </param>
+        /// <param name="row"> Индекс строки </param>
         /// <param name="value"> Записываемое значение </param>
         public void SetLowDiag(int row, double value)
         {
