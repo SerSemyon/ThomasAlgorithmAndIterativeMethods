@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Collections.Generic;
 using System.Collections;
 namespace ThomasAlgorithmSharp
@@ -12,9 +11,9 @@ namespace ThomasAlgorithmSharp
         static int n = 10;
         static double h = 1.0 / n;
         static int N = n + 1;
-        static double epsilon = Math.Pow(h, 3);
-        static string[] headers = { "ih", "yi", "u(ih)", "|yi-u(ih)|" };
-        static double bestOmega;
+        static double epsilon = Math.Pow(h, 3); //задание величины эпсилон-окрестности
+        static string[] headers = { "ih", "yi", "u(ih)", "|yi-u(ih)|" }; //шапка таблиц погрешности
+        static double bestOmega; //лучший параметр метода релаксации для заданной системы
         static Reporter reporter = new Reporter();
         #region functions
         static double Q(double x)
@@ -54,22 +53,36 @@ namespace ThomasAlgorithmSharp
         #endregion
 
         #region r
-        static double[] R(DiagonalMatrix a, double[] y, double[] b)
+        /// <summary>
+        /// Вычисление компонент вектора невязки r = Ay-b
+        /// </summary>
+        /// <param name="A"> Матрица </param>
+        /// <param name="y"> Вектор значений(в виде массива) </param>
+        /// <param name="b"> Вектор правой части(в виде массива) </param>
+        /// <returns> Массив компонент вектора невязки </returns>
+        static double[] R(TridiagonalMatrix A, double[] y, double[] b)
         {
             double[] r = new double[y.Length];
             for (int i = 0; i < r.Length; i++)
             {
                 for (int j = 0; j < r.Length; j++)
                 {
-                    r[i] += a[i, j] * y[j];
+                    r[i] += A[i, j] * y[j];
                 }
                 r[i] -= b[i];
             }
             return r;
         }
-        static double MaxR(DiagonalMatrix a, double[] y, double[] b)
+        /// <summary>
+        /// Вычисляет вектор невязки и возвращает его максимальную компоненту
+        /// </summary>
+        /// <param name="A"> Матрица </param>
+        /// <param name="y"> Вектор значений(в виде массива) </param>
+        /// <param name="b"> Вектор правой части(в виде массива) </param>
+        /// <returns> Возвращает максимальную по модулю компонету вектора невязки </returns>
+        static double MaxR(TridiagonalMatrix A, double[] y, double[] b)
         {
-            double[] r = R(a, y, b);
+            double[] r = R(A, y, b);
             double max = 0;
             foreach (double i in r)
             {
@@ -80,14 +93,14 @@ namespace ThomasAlgorithmSharp
         #endregion
 
         #region algem
-        static double[] MultiplyingMatrixVector(DiagonalMatrix a, double[] x)
+        static double[] MultiplyingMatrixVector(TridiagonalMatrix A, double[] x)
         {
             double[] res = new double[x.Length];
             for (int i = 0; i<x.Length; i++)
             {
                 for (int j = 0; j<x.Length; j++)
                 {
-                    res[i] += a[i, j] * x[j];
+                    res[i] += A[i, j] * x[j];
                 }
             }
             return res;
@@ -104,9 +117,13 @@ namespace ThomasAlgorithmSharp
         #endregion
 
         #region initiate
-        static DiagonalMatrix InitiateMatrix()
+        /// <summary>
+        /// Создание матрицы системы(система описана в файле README.md)
+        /// </summary>
+        /// <returns> Матрица левой части системы </returns>
+        static TridiagonalMatrix InitiateMatrix()
         {
-            DiagonalMatrix matrix = new DiagonalMatrix(N);
+            TridiagonalMatrix matrix = new TridiagonalMatrix(N);
             matrix.SetDiag(0, 1);
             for (int i = 1; i < n-1; i++)
             {
@@ -123,6 +140,10 @@ namespace ThomasAlgorithmSharp
             matrix.SetDiag(n, 1);
             return matrix;
         }
+        /// <summary>
+        /// Создание вектора правой части системы(система описана в файле README.md)
+        /// </summary>
+        /// <returns> Массив компонент правой части </returns>
         static double[] InitiateB()
         {
             double[] result = new double[N];
@@ -148,8 +169,24 @@ namespace ThomasAlgorithmSharp
 
         #endregion
 
+        /// <summary>
+        /// Нахождение погрешности в точке
+        /// </summary>
+        /// <param name="y"> Значение </param>
+        /// <param name="i"> Номер точки </param>
+        /// <returns> абсолютная погрешность в точке </returns>
+        static double Inaccuracy(double y, int i)
+        {
+            return Math.Abs(y - U(i * h));
+        }
+
         #region ThomasAlgorithm
-        static void DirectCourse(DiagonalMatrix matrix, double[] b)
+        /// <summary>
+        /// Прямой ход метода Прогонки
+        /// </summary>
+        /// <param name="matrix"></param>
+        /// <param name="b"></param>
+        static void DirectCourse(TridiagonalMatrix matrix, double[] b)
         {
             double a;
             for (int i = 2; i<n; i++)
@@ -160,7 +197,13 @@ namespace ThomasAlgorithmSharp
                 b[i] -= b[i - 1] * a;
             }
         }
-        static double[] ReverseCourse(DiagonalMatrix matrix, double[] b)
+        /// <summary>
+        /// Обратный ход метода Прогонки
+        /// </summary>
+        /// <param name="matrix"></param>
+        /// <param name="b"></param>
+        /// <returns></returns>
+        static double[] ReverseCourse(TridiagonalMatrix matrix, double[] b)
         {
             double[] y = new double[b.Length];
             y[n] = 0;
@@ -170,9 +213,13 @@ namespace ThomasAlgorithmSharp
             }
             return y;
         }
-        static void Thomas(DiagonalMatrix A)
+        /// <summary>
+        /// Метод Прогонки
+        /// </summary>
+        /// <param name="A"></param>
+        static void Thomas(TridiagonalMatrix A)
         {
-            DiagonalMatrix matrix = A.Copy();
+            TridiagonalMatrix matrix = A.Copy();
             double[] B = InitiateB();
             DirectCourse(matrix, B);
             double[] y = ReverseCourse(matrix, B);
@@ -180,9 +227,13 @@ namespace ThomasAlgorithmSharp
             reporter.Add(header, headers, DataToTable(y));
         }
         #endregion
-        static void Seidel(DiagonalMatrix A)
+        /// <summary>
+        /// Метод Зейделя
+        /// </summary>
+        /// <param name="A"></param>
+        static void Seidel(TridiagonalMatrix A)
         {
-            DiagonalMatrix a = A.Copy();
+            TridiagonalMatrix a = A.Copy();
             double[] b = InitiateB();
             double[] x = new double[N];
             List<double> inaccuracy = new List<double>();
@@ -223,9 +274,13 @@ namespace ThomasAlgorithmSharp
             Reporter.CreateCSV(header, Headers, Table2Columns(K, vecInaccuracy));
         }
 
-        static void Jacobi(DiagonalMatrix A)
+        /// <summary>
+        /// Метод Якоби
+        /// </summary>
+        /// <param name="A"></param>
+        static void Jacobi(TridiagonalMatrix A)
         {
-            DiagonalMatrix a = A.Copy();
+            TridiagonalMatrix a = A.Copy();
             double[] b = InitiateB();
             double[] x = new double[N];
             double[] cx = new double[N];
@@ -268,7 +323,12 @@ namespace ThomasAlgorithmSharp
             Reporter.CreateCSV(header, Headers, Table2Columns(K, vecInaccuracy));
         }
         #region Relax
-        static void RelaxFromOmega(DiagonalMatrix A, int numberParts)
+        /// <summary>
+        /// Поиск оптимального параметра омега для метода верхней релаксации
+        /// </summary>
+        /// <param name="A"></param>
+        /// <param name="numberParts"> Число делений отрезка [1;2]</param>
+        static void RelaxFromOmega(TridiagonalMatrix A, int numberParts)
         {
             double omegaH = 1.0 / numberParts;
             double[] Omega = new double[numberParts];
@@ -298,9 +358,15 @@ namespace ThomasAlgorithmSharp
             bestOmega = Math.Round(optimOmega, 2);
             Console.WriteLine("Оптимальное значение омега - " + bestOmega);
         }
-        static int Relax(DiagonalMatrix A, double omega)
+        /// <summary>
+        /// Метод релаксации с заданным параметром omega
+        /// </summary>
+        /// <param name="A"></param>
+        /// <param name="omega"></param>
+        /// <returns> Число итераций, необходимых для решения при заданном параметре </returns>
+        static int Relax(TridiagonalMatrix A, double omega)
         {
-            DiagonalMatrix a = A.Copy();
+            TridiagonalMatrix a = A.Copy();
             double[] b = InitiateB();
             double[] x = new double[N];
             double[] cx = new double[N];
@@ -331,9 +397,13 @@ namespace ThomasAlgorithmSharp
             return k;
         }
 
-        static void Relax(DiagonalMatrix A)
+       /// <summary>
+       /// Метод Верхней Релаксации
+       /// </summary>
+       /// <param name="A"></param>
+        static void Relax(TridiagonalMatrix A)
         {
-            DiagonalMatrix a = A.Copy();
+            TridiagonalMatrix a = A.Copy();
             double[] b = InitiateB();
             double[] x = new double[N];
             double[] cx = new double[N];
@@ -379,16 +449,12 @@ namespace ThomasAlgorithmSharp
             Reporter.CreateCSV(header, Headers, Table2Columns(K, vecInaccuracy));
         }
         #endregion relax
-        static void PrintTable(double[] x)
-        {
-            Console.WriteLine("{0,20}{1,25}{2,30}{3,30}", "ih", "yi", "u(ih)", "|yi-u(ih)|");
-            for (int i =0; i<x.Length; i++)
-            {
-                double u = U(i * h);
-                Console.WriteLine("{0,20}{1,25}{2,30}{3,30}", i * h, x[i], u, Math.Abs(x[i] - u));
-            }
-
-        }
+        #region tables
+        /// <summary>
+        /// Формирование данных для таблицы погрешности
+        /// </summary>
+        /// <param name="x"></param>
+        /// <returns></returns>
         static string[][] DataToTable(double[] x)
         {
             string[][] data = new string[4][];
@@ -406,6 +472,12 @@ namespace ThomasAlgorithmSharp
             }
             return data;
         }
+        /// <summary>
+        /// Формирование таблицы из двух столбцов: точка, значение
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
         static string[][] Table2Columns(double[] x, double[] y)
         {
             string[][] data = new string[2][];
@@ -418,13 +490,14 @@ namespace ThomasAlgorithmSharp
             }
             return data;
         }
-        static double Inaccuracy(double x, int i)
+        #endregion tables
+        /// <summary>
+        /// Метод Наискорейшего Спуска
+        /// </summary>
+        /// <param name="A"></param>
+        static void FastestDescent(TridiagonalMatrix A)
         {
-            return Math.Abs(x - U(i * h));
-        }
-        static void FastestDescent(DiagonalMatrix A)
-        {
-            DiagonalMatrix a = A.Copy();
+            TridiagonalMatrix a = A.Copy();
             double[] b = InitiateB();
             double[] x = new double[N];
             List<double> inaccuracy = new List<double>();
@@ -463,184 +536,13 @@ namespace ThomasAlgorithmSharp
         }
         static void Main(string[] args)
         {
-            DiagonalMatrix A = InitiateMatrix();
+            TridiagonalMatrix A = InitiateMatrix();
             Thomas(A);
             Jacobi(A);
             Seidel(A);
             FastestDescent(A);
             RelaxFromOmega(A, 20);
             Relax(A);
-        }
-        static void AllMethod(int number)
-        {
-            n = number;
-            N = n + 1;
-        }
-    }
-    class Reporter
-    {
-        public void Add(string nameTable, string[] names, string[][] data)
-        {
-            Console.WriteLine(PrintTableLaTeX(nameTable, names, data));
-            //CreateCSV(nameTable, names, data);
-        }
-        static string PrintTableLaTeX(string nameTable, string[] names, string[][] data)
-        {
-            //настройки таблицы
-            string result = @"\begin{table}\caption{" + nameTable + @"}\begin {tabular}{|";
-            for (int i = 0; i < names.Length; i++)
-            {
-                result += @"p{ 3cm}|";
-            }
-            result += @"} \hline $" + names[0] + "$ \n";
-            for (int i = 1; i < names.Length; i++) //шапка таблицы
-            {
-                result += " & $" + names[i] + "$";
-            }
-            result += @"\\ \hline ";
-            int rows = data[0].Length;
-            int columns = data.Length;
-            for (int i = 0; i < rows; i++)
-            {
-                if (i != 0) result += @"\\ \hline";
-                result += "\n" + $"{data[0][i]}";
-                for (int j = 1; j < columns; j++)
-                {
-                    result += $" & {data[j][i]}";
-                }
-            }
-            result += @"\\ \hline\end{tabular} \end{table}" + "\n";
-            return result;
-        }
-        public static void CreateCSV(string nameFile, string[] names, string[][] data)
-        {
-            StreamWriter writer = new StreamWriter("Данные для графиков\\"+nameFile + ".csv");
-            for (int i = 0; i<names.Length-1; i++)
-            {
-                writer.Write(names[i]+";");
-            }
-            writer.WriteLine(names[names.Length - 1]);
-            int rows = data[0].Length;
-            int columns = data.Length;
-            for (int i = 0; i < rows; i++)
-            {
-                for (int j = 0; j<columns-1; j++)
-                {
-                    writer.Write(data[j][i] + ";");
-                }
-                writer.WriteLine(data[columns-1][i]);
-            }
-            writer.Close();
-        }
-        public Reporter() {}
-    }
-    class DiagonalMatrix
-    {
-        double[] diag;
-        double[] high_diag;
-        double[] low_diag;
-        int size;
-        public DiagonalMatrix(int n)
-        {
-            size = n;
-            diag = new double[n];
-            high_diag = new double[n - 1];
-            low_diag = new double[n - 1];
-        }
-        public DiagonalMatrix Copy()
-        {
-            DiagonalMatrix clone = new DiagonalMatrix(size);
-            for (int i = 0; i < high_diag.Length; i++)
-            {
-                clone.SetHighDiag(i, high_diag[i]);
-            }
-            for (int i = 0; i < diag.Length; i++)
-            {
-                clone.SetDiag(i, diag[i]);
-            }
-            for (int i = 0; i < low_diag.Length; i++)
-            {
-                clone.SetLowDiag(i+1, low_diag[i]);
-            }
-            return clone;
-        }
-        public int GetLength()
-        {
-            return size;
-        }
-        public double this[int row, int col]
-        {
-            get
-            {
-                if (row == col)
-                {
-                    return diag[row];
-                }
-                else if (col - row == 1)
-                {
-                    return high_diag[row];
-                }
-                else if (row - col == 1)
-                {
-                    return low_diag[col];
-                }
-                else return 0;
-            }
-            set
-            {
-                if (row == col)
-                {
-                    diag[row] = value;
-                }
-                else if (col - row == 1)
-                {
-                    high_diag[row] = value;
-                }
-                else if (row - col == 1)
-                {
-                    low_diag[col] = value;
-                }
-                else
-                {
-                    Console.WriteLine("Попытка записать не диагональный элемент");
-                }
-            }
-        }
-        public void SetHighDiag(int row, double value)
-        {
-            high_diag[row] = value;
-        }
-        public void SetDiag(int row, double value)
-        {
-            diag[row] = value;
-        }
-        public void SetLowDiag(int row, double value)
-        {
-            low_diag[row-1] = value;
-        }
-        public void Print()
-        {
-            Console.WriteLine("Матрица коэффициентов:");
-            for (int i = 0; i < size; i++)
-            {
-                for (int j = 0; j < size; j++)
-                {
-                    Console.Write(this[i,j].ToString()+' ');
-                }
-                Console.WriteLine();
-            }
-        }
-        public void Print(double[] b)
-        {
-            Console.WriteLine("Матрица коэффициентов | значение:");
-            for (int i = 0; i < size; i++)
-            {
-                for (int j = 0; j < size; j++)
-                {
-                    Console.Write(this[i, j].ToString() + ' ');
-                }
-                Console.WriteLine(" | "+b[i]);
-            }
         }
     }
 }
