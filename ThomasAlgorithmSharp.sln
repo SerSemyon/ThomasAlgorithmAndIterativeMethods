@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.32413.511
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32602.215
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThomasAlgorithmSharp", "ThomasAlgorithmSharp\ThomasAlgorithmSharp.csproj", "{DBF5BE17-B595-4087-8898-156C562314B8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThomasAlgorithmSharp", "ThomasAlgorithmSharp\ThomasAlgorithmSharp.csproj", "{DBF5BE17-B595-4087-8898-156C562314B8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TridiagonalMatrix", "TridiagonalMatrix\TridiagonalMatrix.csproj", "{B2D81F02-E90E-4ACD-B032-4F5D99D98768}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{DBF5BE17-B595-4087-8898-156C562314B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DBF5BE17-B595-4087-8898-156C562314B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DBF5BE17-B595-4087-8898-156C562314B8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B2D81F02-E90E-4ACD-B032-4F5D99D98768}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B2D81F02-E90E-4ACD-B032-4F5D99D98768}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B2D81F02-E90E-4ACD-B032-4F5D99D98768}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B2D81F02-E90E-4ACD-B032-4F5D99D98768}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
