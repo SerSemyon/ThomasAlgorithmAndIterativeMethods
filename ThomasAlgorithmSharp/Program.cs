@@ -219,7 +219,7 @@ namespace ThomasAlgorithmSharp
         /// <param name="A"></param>
         static void Thomas(TridiagonalMatrix A)
         {
-            TridiagonalMatrix matrix = A.Copy();
+            TridiagonalMatrix matrix = (TridiagonalMatrix)A.Clone();
             double[] B = InitiateB();
             DirectCourse(matrix, B);
             double[] y = ReverseCourse(matrix, B);
@@ -233,7 +233,7 @@ namespace ThomasAlgorithmSharp
         /// <param name="A"></param>
         static void Seidel(TridiagonalMatrix A)
         {
-            TridiagonalMatrix a = A.Copy();
+            TridiagonalMatrix a = (TridiagonalMatrix)A.Clone();
             double[] b = InitiateB();
             double[] x = new double[N];
             List<double> inaccuracy = new List<double>();
@@ -280,7 +280,7 @@ namespace ThomasAlgorithmSharp
         /// <param name="A"></param>
         static void Jacobi(TridiagonalMatrix A)
         {
-            TridiagonalMatrix a = A.Copy();
+            TridiagonalMatrix a = (TridiagonalMatrix)A.Clone();
             double[] b = InitiateB();
             double[] x = new double[N];
             double[] cx = new double[N];
@@ -366,7 +366,7 @@ namespace ThomasAlgorithmSharp
         /// <returns> Число итераций, необходимых для решения при заданном параметре </returns>
         static int Relax(TridiagonalMatrix A, double omega)
         {
-            TridiagonalMatrix a = A.Copy();
+            TridiagonalMatrix a = (TridiagonalMatrix)A.Clone();
             double[] b = InitiateB();
             double[] x = new double[N];
             double[] cx = new double[N];
@@ -403,7 +403,7 @@ namespace ThomasAlgorithmSharp
        /// <param name="A"></param>
         static void Relax(TridiagonalMatrix A)
         {
-            TridiagonalMatrix a = A.Copy();
+            TridiagonalMatrix a = (TridiagonalMatrix)A.Clone();
             double[] b = InitiateB();
             double[] x = new double[N];
             double[] cx = new double[N];
@@ -497,7 +497,7 @@ namespace ThomasAlgorithmSharp
         /// <param name="A"></param>
         static void FastestDescent(TridiagonalMatrix A)
         {
-            TridiagonalMatrix a = A.Copy();
+            TridiagonalMatrix a = (TridiagonalMatrix)A.Clone();
             double[] b = InitiateB();
             double[] x = new double[N];
             List<double> inaccuracy = new List<double>();

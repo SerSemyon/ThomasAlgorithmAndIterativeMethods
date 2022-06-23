@@ -3,7 +3,7 @@
 /// <summary>
 /// Класс квадратных трёхдиагональных матриц
 /// </summary>
-public class TridiagonalMatrix
+public class TridiagonalMatrix : ICloneable
 {
     double[] diag;
     double[] high_diag;
@@ -23,7 +23,7 @@ public class TridiagonalMatrix
         high_diag = new double[n - 1];
         low_diag = new double[n - 1];
     }
-    public TridiagonalMatrix Copy()
+    public object Clone()
     {
         TridiagonalMatrix clone = new TridiagonalMatrix(size);
         for (int i = 0; i < high_diag.Length; i++)
